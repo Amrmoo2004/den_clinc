@@ -1,0 +1,44 @@
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+export async function sendemails({
+    from = process.env.app_email,
+    to = "",
+    cc = "",
+    bcc = "",
+    text = "",
+    html = "",
+    subject = "den-clinc",
+    attachments = []
+} = {}) {
+
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        pool: true, // Use pooled connections
+        tls: {
+            ciphers: "SSLv3",
+            rejectUnauthorized: false
+        },
+        auth: {
+            user: process.env.app_email,
+            pass: process.env.app_password,
+        },
+    });
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"den-clinc" <${process.env.app_email}>`,
+            to, cc, bcc, text, html, subject, attachments
+        });
+
+        return info;
+    } catch (error) {
+        console.error("Error sending email:", error);
+        throw error;
+    }
+}

@@ -10,8 +10,12 @@ const options = {
         },
         servers: [
             {
+                url: 'http://35.173.181.149:3000',
+                description: 'Production Server',
+            },
+            {
                 url: process.env.BASE_URL || 'http://localhost:3000',
-                description: 'Development Server',
+                description: 'Local Development Server',
             },
         ],
         components: {

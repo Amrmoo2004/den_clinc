@@ -16,6 +16,7 @@ import invoicesRouter from './modules/invoices/invoices.controller.js';
 import inventoryRouter from './modules/inventory/inventory.controller.js';
 import reportsRouter from './modules/reports/reports.controller.js';
 import settingsRouter from './modules/settings/settings.controller.js';
+import dailyBookingsRouter from './modules/dailyBookings/dailyBookings.controller.js';
 
 export const bootstrap = async () => {
     const app = express();
@@ -47,6 +48,7 @@ export const bootstrap = async () => {
     app.use('/api/inventory', inventoryRouter);
     app.use('/api/reports', reportsRouter);
     app.use('/api/settings', settingsRouter);
+    app.use('/api/daily-bookings', dailyBookingsRouter);
 
     // 404 handler
     app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));

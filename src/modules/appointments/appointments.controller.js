@@ -42,6 +42,35 @@ const router = Router();
  *               startTime: { type: string, example: "10:30" }
  *               endTime: { type: string, example: "11:00" }
  *               doctorNote: { type: string }
+ *               record:
+ *                 type: object
+ *                 description: السجل المرضي والإجراءات
+ *                 properties:
+ *                   medicalHistory:
+ *                     type: object
+ *                     properties:
+ *                       hasChronicDisease: { type: boolean }
+ *                       chronicDiseases: { type: array, items: { type: string } }
+ *                       isTakingMedication: { type: boolean }
+ *                       medications: { type: string }
+ *                   dentalChart:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         toothNumber: { type: string }
+ *                         complain: { type: string }
+ *                         cost: { type: number }
+ *                   procedures:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         date: { type: string, format: date-time }
+ *                         procedure: { type: string }
+ *                         totalCost: { type: number }
+ *                         paid: { type: number }
+ *                         remaining: { type: number }
  *     responses:
  *       201:
  *         description: تم حجز الموعد
@@ -74,6 +103,34 @@ const router = Router();
  *               startTime: { type: string }
  *               endTime: { type: string }
  *               doctorNote: { type: string }
+ *               record:
+ *                 type: object
+ *                 properties:
+ *                   medicalHistory:
+ *                     type: object
+ *                     properties:
+ *                       hasChronicDisease: { type: boolean }
+ *                       chronicDiseases: { type: array, items: { type: string } }
+ *                       isTakingMedication: { type: boolean }
+ *                       medications: { type: string }
+ *                   dentalChart:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         toothNumber: { type: string }
+ *                         complain: { type: string }
+ *                         cost: { type: number }
+ *                   procedures:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         date: { type: string, format: date-time }
+ *                         procedure: { type: string }
+ *                         totalCost: { type: number }
+ *                         paid: { type: number }
+ *                         remaining: { type: number }
  *     responses:
  *       200:
  *         description: تم التعديل

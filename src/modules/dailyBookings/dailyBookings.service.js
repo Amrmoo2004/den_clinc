@@ -33,7 +33,7 @@ export const getDailyBookings = asynchandler(async (req, res) => {
 
 // Create a new daily booking
 export const createDailyBooking = asynchandler(async (req, res, next) => {
-    const { name, phone, address, notes, bookingTime } = req.body;
+    const { name, phone, age, address, notes, bookingTime, record } = req.body;
 
     if (!name || !phone) {
         return next(new AppError('الاسم ورقم الهاتف مطلوبان', 400));
@@ -43,8 +43,10 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
     const payload = {
         name,
         phone,
+        age,
         address,
         notes,
+        record,
         createdBy: req.user._id,
     };
 
@@ -63,9 +65,10 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
 
 // Update a daily booking (optional, if needed)
 export const updateDailyBooking = asynchandler(async (req, res, next) => {
-    const { name, phone, address, notes, bookingTime } = req.body;
+    const { name, phone, age, address, notes, bookingTime, record } = req.body;
     
-    const updateData = { name, phone, address, notes };
+    const updateData = { name, phone, age, address, notes };
+    if (record) updateData.record = record;
     if (bookingTime) {
         updateData.bookingTime = new Date(bookingTime);
         const d = new Date(bookingTime);

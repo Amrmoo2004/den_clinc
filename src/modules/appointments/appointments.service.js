@@ -48,7 +48,7 @@ export const getAll = asynchandler(async (req, res) => {
 });
 
 export const create = asynchandler(async (req, res, next) => {
-    const { patient, service, date, startTime, endTime, doctorNote } = req.body;
+    const { patient, service, date, startTime, endTime, doctorNote, record } = req.body;
 
     if (!patient || !service || !date || !startTime) {
         return next(new AppError('المريض والخدمة والتاريخ والوقت مطلوبون', 400));
@@ -63,7 +63,7 @@ export const create = asynchandler(async (req, res, next) => {
     if (!serviceExists) return next(new AppError('الخدمة غير موجودة', 404));
 
     const appointment = await Appointment.create({
-        patient, service, date, startTime, endTime, doctorNote,
+        patient, service, date, startTime, endTime, doctorNote, record,
         createdBy: req.user._id,
     });
 
@@ -87,11 +87,11 @@ export const getOne = asynchandler(async (req, res, next) => {
 });
 
 export const update = asynchandler(async (req, res, next) => {
-    const { date, startTime, endTime, doctorNote, service } = req.body;
+    const { date, startTime, endTime, doctorNote, service, record } = req.body;
 
     const appointment = await Appointment.findByIdAndUpdate(
         req.params.id,
-        { date, startTime, endTime, doctorNote, service },
+        { date, startTime, endTime, doctorNote, service, record },
         { new: true, runValidators: true }
     ).populate('patient', 'name phone').populate('service', 'name price');
 

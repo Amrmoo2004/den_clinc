@@ -36,9 +36,39 @@ const router = Router();
  *             properties:
  *               name: { type: string, description: "اسم المريض" }
  *               phone: { type: string, description: "رقم الهاتف" }
+ *               age: { type: number, description: "العمر" }
  *               address: { type: string, description: "العنوان" }
  *               notes: { type: string, description: "ملاحظات" }
  *               bookingTime: { type: string, format: date-time, description: "وقت الحجز (اختياري، افتراضيا الوقت الحالي)" }
+ *               record:
+ *                 type: object
+ *                 description: السجل المرضي والإجراءات
+ *                 properties:
+ *                   medicalHistory:
+ *                     type: object
+ *                     properties:
+ *                       hasChronicDisease: { type: boolean }
+ *                       chronicDiseases: { type: array, items: { type: string } }
+ *                       isTakingMedication: { type: boolean }
+ *                       medications: { type: string }
+ *                   dentalChart:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         toothNumber: { type: string }
+ *                         complain: { type: string }
+ *                         cost: { type: number }
+ *                   procedures:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         date: { type: string, format: date-time }
+ *                         procedure: { type: string }
+ *                         totalCost: { type: number }
+ *                         paid: { type: number }
+ *                         remaining: { type: number }
  *     responses:
  *       201:
  *         description: تم تسجيل الحجز
@@ -59,8 +89,37 @@ const router = Router();
  *             properties:
  *               name: { type: string }
  *               phone: { type: string }
+ *               age: { type: number }
  *               address: { type: string }
  *               notes: { type: string }
+ *               record:
+ *                 type: object
+ *                 properties:
+ *                   medicalHistory:
+ *                     type: object
+ *                     properties:
+ *                       hasChronicDisease: { type: boolean }
+ *                       chronicDiseases: { type: array, items: { type: string } }
+ *                       isTakingMedication: { type: boolean }
+ *                       medications: { type: string }
+ *                   dentalChart:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         toothNumber: { type: string }
+ *                         complain: { type: string }
+ *                         cost: { type: number }
+ *                   procedures:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         date: { type: string, format: date-time }
+ *                         procedure: { type: string }
+ *                         totalCost: { type: number }
+ *                         paid: { type: number }
+ *                         remaining: { type: number }
  *     responses:
  *       200:
  *         description: تم التعديل

@@ -129,13 +129,79 @@ const router = Router();
  *     responses:
  *       200:
  *         description: تم تسجيل الدفعة
+ *
+ * /api/invoices/installments/upcoming:
+ *   get:
+ *     summary: جلب الأقساط القادمة غير المدفوعة لجميع المرضى
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: query, name: from, schema: { type: string, format: date }, description: "من تاريخ استحقاق YYYY-MM-DD" }
+ *       - { in: query, name: to, schema: { type: string, format: date }, description: "إلى تاريخ استحقاق YYYY-MM-DD" }
+ *       - { in: query, name: patient, schema: { type: string }, description: "ID المريض للتصفية" }
+ *     responses:
+ *       200:
+ *         description: قائمة الأقساط القادمة
+ *
+ * /api/invoices/{id}/installments:
+ *   post:
+ *     summary: توليد/جدولة أقساط لفاتورة
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               numberOfInstallments: { type: integer, example: 3, description: "عدد الأقساط للتقسيم التلقائي" }
+ *               startDate: { type: string, format: date, example: "2024-05-20", description: "تاريخ استحقاق أول قسط" }
+ *               intervalMonths: { type: integer, default: 1, description: "الفاصل الزمني بالأشهر" }
+ *               installmentsList:
+ *                 type: array
+ *                 description: قائمة الأقساط يدويًا (في حال لم تستخدم التقسيم التلقائي)
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     amount: { type: number, example: 500 }
+ *                     dueDate: { type: string, format: date, example: "2024-06-20" }
+ *     responses:
+ *       200:
+ *         description: تم إنشاء خطة الأقساط بنجاح
+ *
+ * /api/invoices/{id}/installments/{installmentId}/pay:
+ *   patch:
+ *     summary: سداد قسط محدد في فاتورة
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *       - { in: path, name: installmentId, required: true, schema: { type: string } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paymentMethod: { type: string, enum: [cash, card, transfer], default: "cash" }
+ *     responses:
+ *       200:
+ *         description: تم سداد القسط بنجاح
  */
 
 router.get('/stats', authUser, invoicesService.getStats);
 router.get('/export', authUser, invoicesService.exportInvoices);
+router.get('/installments/upcoming', authUser, invoicesService.getUpcomingInstallments);
 router.get('/', authUser, invoicesService.getAll);
 router.post('/', authUser, invoicesService.create);
 router.get('/:id', authUser, invoicesService.getOne);
 router.patch('/:id/payment', authUser, invoicesService.recordPayment);
+router.post('/:id/installments', authUser, invoicesService.generateInstallments);
+router.patch('/:id/installments/:installmentId/pay', authUser, invoicesService.payInstallment);
 
 export default router;

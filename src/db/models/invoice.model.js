@@ -26,6 +26,15 @@ const invoiceSchema = new mongoose.Schema(
             default: 'cash',
         },
         notes: { type: String, trim: true },
+        installments: [
+            {
+                amount: { type: Number, required: true },
+                dueDate: { type: Date, required: true },
+                status: { type: String, enum: ['paid', 'unpaid'], default: 'unpaid' },
+                paidDate: { type: Date },
+                paymentMethod: { type: String, enum: ['cash', 'card', 'transfer'] },
+            },
+        ],
         createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     },
     { timestamps: true }

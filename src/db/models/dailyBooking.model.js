@@ -36,6 +36,11 @@ const dailyBookingSchema = new mongoose.Schema(
                 remaining: { type: Number }
             }]
         },
+        status: {
+            type: String,
+            enum: ['pending', 'completed'],
+            default: 'pending',
+        },
         createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     },
     { timestamps: true }

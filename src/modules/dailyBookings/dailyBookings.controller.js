@@ -18,6 +18,7 @@ const router = Router();
  *       - bearerAuth: []
  *     parameters:
  *       - { in: query, name: date, schema: { type: string, format: date, example: "2024-01-15" }, description: "تاريخ محدد YYYY-MM-DD (افتراضيا يجلب حجوزات اليوم الحالي فقط)" }
+ *       - { in: query, name: status, schema: { type: string, enum: [pending, completed] }, description: "تصفية حسب الحالة" }
  *     responses:
  *       200:
  *         description: قائمة الحجوزات
@@ -39,6 +40,7 @@ const router = Router();
  *               age: { type: number, description: "العمر" }
  *               address: { type: string, description: "العنوان" }
  *               notes: { type: string, description: "ملاحظات" }
+ *               status: { type: string, enum: [pending, completed], default: pending, description: "حالة الحجز" }
  *               bookingTime: { type: string, format: date-time, description: "وقت الحجز (اختياري، افتراضيا الوقت الحالي)" }
  *               record:
  *                 type: object
@@ -92,6 +94,7 @@ const router = Router();
  *               age: { type: number }
  *               address: { type: string }
  *               notes: { type: string }
+ *               status: { type: string, enum: [pending, completed] }
  *               record:
  *                 type: object
  *                 properties:
@@ -133,11 +136,33 @@ const router = Router();
  *     responses:
  *       200:
  *         description: تم الحذف
+ *
+ * /api/daily-bookings/{id}/status:
+ *   patch:
+ *     summary: تغيير حالة حجز يومي
+ *     tags: [DailyBookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status: { type: string, enum: [pending, completed] }
+ *     responses:
+ *       200:
+ *         description: تم تغيير الحالة
  */
 
 router.get('/', authUser, dailyBookingsService.getDailyBookings);
 router.post('/', authUser, dailyBookingsService.createDailyBooking);
 router.put('/:id', authUser, dailyBookingsService.updateDailyBooking);
+router.patch('/:id/status', authUser, dailyBookingsService.updateStatus);
 router.delete('/:id', authUser, dailyBookingsService.removeDailyBooking);
 
 export default router;

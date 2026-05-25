@@ -4,7 +4,7 @@ import { asynchandler } from '../../utils/response/response.js';
 
 // Get Daily Bookings (Default to today unless date is provided)
 export const getDailyBookings = asynchandler(async (req, res) => {
-    const { date } = req.query;
+    const { date, status } = req.query;
     const filter = {};
 
     let targetDate;
@@ -28,12 +28,24 @@ export const getDailyBookings = asynchandler(async (req, res) => {
         .sort({ bookingTime: 1 })
         .lean();
 
-    return res.status(200).json({ success: true, count: bookings.length, data: bookings });
+    // Stats for the dashboard
+    const stats = {
+        total: bookings.length,
+        pending: bookings.filter(b => b.status === 'pending').length,
+        completed: bookings.filter(b => b.status === 'completed').length,
+    };
+
+    let filteredBookings = bookings;
+    if (status) {
+        filteredBookings = bookings.filter(b => b.status === status);
+    }
+
+    return res.status(200).json({ success: true, count: filteredBookings.length, data: filteredBookings, stats });
 });
 
 // Create a new daily booking
 export const createDailyBooking = asynchandler(async (req, res, next) => {
-    const { name, phone, age, address, notes, bookingTime, record } = req.body;
+    const { name, phone, age, address, notes, bookingTime, record, status } = req.body;
 
     if (!name || !phone) {
         return next(new AppError('الاسم ورقم الهاتف مطلوبان', 400));
@@ -47,6 +59,7 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
         address,
         notes,
         record,
+        status,
         createdBy: req.user._id,
     };
 
@@ -65,9 +78,10 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
 
 // Update a daily booking (optional, if needed)
 export const updateDailyBooking = asynchandler(async (req, res, next) => {
-    const { name, phone, age, address, notes, bookingTime, record } = req.body;
+    const { name, phone, age, address, notes, bookingTime, record, status } = req.body;
     
     const updateData = { name, phone, age, address, notes };
+    if (status) updateData.status = status;
     if (record) updateData.record = record;
     if (bookingTime) {
         updateData.bookingTime = new Date(bookingTime);
@@ -94,4 +108,24 @@ export const removeDailyBooking = asynchandler(async (req, res, next) => {
     if (!booking) return next(new AppError('الحجز غير موجود', 404));
 
     return res.status(200).json({ success: true, message: 'تم إلغاء الحجز' });
+});
+
+// Update status of a daily booking
+export const updateStatus = asynchandler(async (req, res, next) => {
+    const { status } = req.body;
+    const validStatuses = ['pending', 'completed'];
+
+    if (!status || !validStatuses.includes(status)) {
+        return next(new AppError(`الحالة يجب أن تكون: ${validStatuses.join(', ')}`, 400));
+    }
+
+    const booking = await DailyBooking.findByIdAndUpdate(
+        req.params.id,
+        { status },
+        { new: true, runValidators: true }
+    );
+
+    if (!booking) return next(new AppError('الحجز غير موجود', 404));
+
+    return res.status(200).json({ success: true, message: 'تم تغيير حالة الحجز', data: booking });
 });

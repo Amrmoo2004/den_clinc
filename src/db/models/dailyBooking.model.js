@@ -41,6 +41,8 @@ const dailyBookingSchema = new mongoose.Schema(
             enum: ['pending', 'completed'],
             default: 'pending',
         },
+        bookingPrice: { type: Number },
+        extraPaid: { type: Number, default: 0 },
         createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     },
     { timestamps: true }

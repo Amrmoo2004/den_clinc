@@ -42,6 +42,8 @@ const router = Router();
  *               startTime: { type: string, example: "10:30" }
  *               endTime: { type: string, example: "11:00" }
  *               doctorNote: { type: string }
+ *               bookingPrice: { type: number, description: "سعر الحجز (اختياري، افتراضياً يجلب من الإعدادات)" }
+ *               extraPaid: { type: number, default: 0, description: "الفلوس الإضافية المدفوعة" }
  *               record:
  *                 type: object
  *                 description: السجل المرضي والإجراءات
@@ -103,6 +105,8 @@ const router = Router();
  *               startTime: { type: string }
  *               endTime: { type: string }
  *               doctorNote: { type: string }
+ *               bookingPrice: { type: number }
+ *               extraPaid: { type: number }
  *               record:
  *                 type: object
  *                 properties:

@@ -65,10 +65,38 @@ const router = Router();
  *     responses:
  *       200:
  *         description: بيانات التقرير الكاملة
+ *
+ * /api/reports/daily-profit-dashboard:
+ *   get:
+ *     summary: لوحة تحكم الربح اليومي
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: query, name: date, schema: { type: string, format: date }, description: "تاريخ محدد YYYY-MM-DD (افتراضيا اليوم)" }
+ *       - { in: query, name: from, schema: { type: string, format: date }, description: "بداية الفترة YYYY-MM-DD" }
+ *       - { in: query, name: to, schema: { type: string, format: date }, description: "نهاية الفترة YYYY-MM-DD" }
+ *     responses:
+ *       200:
+ *         description: تفاصيل الربح اليومي من الحجوزات والمواعيد
+ * /api/reports/bookings-analytics:
+ *   get:
+ *     summary: تحليلات وتقسيمات الحجوزات (الداشبورد)
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: query, name: from, schema: { type: string, format: date }, description: "بداية الفترة YYYY-MM-DD" }
+ *       - { in: query, name: to, schema: { type: string, format: date }, description: "نهاية الفترة YYYY-MM-DD" }
+ *     responses:
+ *       200:
+ *         description: تحليلات مفصلة للحجوزات تشمل (باليوم، بالحالة، بالنوع، بالطبيب)
  */
 
 router.get('/dashboard', authUser, reportsService.getDashboard);
 router.get('/top-services', authUser, reportsService.getTopServices);
 router.get('/export', authUser, reportsService.exportReport);
+router.get('/daily-profit-dashboard', authUser, reportsService.getDailyProfitDashboard);
+router.get('/bookings-analytics', authUser, reportsService.getBookingsAnalytics);
 
 export default router;

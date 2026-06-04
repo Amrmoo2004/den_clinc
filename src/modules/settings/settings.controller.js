@@ -136,6 +136,33 @@ const router = Router();
  *     responses:
  *       200:
  *         description: تم الحذف
+ *
+ * /api/settings/clinic:
+ *   get:
+ *     summary: جلب إعدادات العيادة (سعر الحجز)
+ *     tags: [Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: إعدادات العيادة الحالية
+ *   put:
+ *     summary: تحديث إعدادات العيادة (الدكتور فقط)
+ *     tags: [Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingPrice]
+ *             properties:
+ *               bookingPrice: { type: number, example: 100 }
+ *     responses:
+ *       200:
+ *         description: تم تحديث الإعدادات بنجاح
  */
 
 // Services routes (all authenticated)
@@ -149,5 +176,9 @@ router.get('/users', authUser, isAuthorized(['doctor']), settingsService.getAllU
 router.post('/users', authUser, isAuthorized(['doctor']), settingsService.createUser);
 router.patch('/users/:id', authUser, isAuthorized(['doctor']), settingsService.toggleUserStatus);
 router.delete('/users/:id', authUser, isAuthorized(['doctor']), settingsService.deleteUser);
+
+// Clinic settings routes
+router.get('/clinic', authUser, settingsService.getClinicSettings);
+router.put('/clinic', authUser, isAuthorized(['doctor']), settingsService.updateClinicSettings);
 
 export default router;

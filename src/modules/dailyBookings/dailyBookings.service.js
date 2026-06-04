@@ -1,4 +1,5 @@
 import DailyBooking from '../../db/models/dailyBooking.model.js';
+import Setting from '../../db/models/setting.model.js';
 import { AppError } from '../../utils/appError.js';
 import { asynchandler } from '../../utils/response/response.js';
 
@@ -29,10 +30,17 @@ export const getDailyBookings = asynchandler(async (req, res) => {
         .lean();
 
     // Stats for the dashboard
+    const totalBookingPrice = bookings.reduce((sum, b) => sum + (b.bookingPrice || 0), 0);
+    const totalExtraPaid = bookings.reduce((sum, b) => sum + (b.extraPaid || 0), 0);
+    const totalDailyProfit = totalBookingPrice + totalExtraPaid;
+
     const stats = {
         total: bookings.length,
         pending: bookings.filter(b => b.status === 'pending').length,
         completed: bookings.filter(b => b.status === 'completed').length,
+        totalBookingPrice,
+        totalExtraPaid,
+        totalDailyProfit,
     };
 
     let filteredBookings = bookings;
@@ -45,10 +53,16 @@ export const getDailyBookings = asynchandler(async (req, res) => {
 
 // Create a new daily booking
 export const createDailyBooking = asynchandler(async (req, res, next) => {
-    const { name, phone, age, address, notes, bookingTime, record, status } = req.body;
+    const { name, phone, age, address, notes, bookingTime, record, status, bookingPrice, extraPaid } = req.body;
 
     if (!name || !phone) {
         return next(new AppError('الاسم ورقم الهاتف مطلوبان', 400));
+    }
+
+    let finalBookingPrice = bookingPrice;
+    if (finalBookingPrice === undefined) {
+        const settings = await Setting.findOne().lean();
+        finalBookingPrice = settings ? settings.bookingPrice : 100;
     }
 
     // if bookingTime is provided, use it, else default in model is Date.now
@@ -60,6 +74,8 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
         notes,
         record,
         status,
+        bookingPrice: finalBookingPrice,
+        extraPaid: extraPaid !== undefined ? extraPaid : 0,
         createdBy: req.user._id,
     };
 
@@ -78,11 +94,13 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
 
 // Update a daily booking (optional, if needed)
 export const updateDailyBooking = asynchandler(async (req, res, next) => {
-    const { name, phone, age, address, notes, bookingTime, record, status } = req.body;
+    const { name, phone, age, address, notes, bookingTime, record, status, bookingPrice, extraPaid } = req.body;
     
     const updateData = { name, phone, age, address, notes };
     if (status) updateData.status = status;
     if (record) updateData.record = record;
+    if (bookingPrice !== undefined) updateData.bookingPrice = bookingPrice;
+    if (extraPaid !== undefined) updateData.extraPaid = extraPaid;
     if (bookingTime) {
         updateData.bookingTime = new Date(bookingTime);
         const d = new Date(bookingTime);

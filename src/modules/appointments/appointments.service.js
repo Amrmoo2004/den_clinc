@@ -1,6 +1,7 @@
 import Appointment from '../../db/models/appointment.model.js';
 import Patient from '../../db/models/patient.model.js';
 import Service from '../../db/models/service.model.js';
+import Setting from '../../db/models/setting.model.js';
 import { AppError } from '../../utils/appError.js';
 import { asynchandler } from '../../utils/response/response.js';
 
@@ -35,6 +36,11 @@ export const getAll = asynchandler(async (req, res) => {
         .lean();
 
     // Stats for the dashboard
+    const totalBookingPrice = data.reduce((sum, a) => sum + (a.bookingPrice || 0), 0);
+    const totalExtraPaid = data.reduce((sum, a) => sum + (a.extraPaid || 0), 0);
+    const totalServicePrice = data.reduce((sum, a) => sum + (a.service?.price || 0), 0);
+    const totalAppointmentsProfit = totalBookingPrice + totalExtraPaid + totalServicePrice;
+
     const stats = {
         total: data.length,
         pending: data.filter(a => a.status === 'pending').length,
@@ -42,13 +48,17 @@ export const getAll = asynchandler(async (req, res) => {
         completed: data.filter(a => a.status === 'completed').length,
         cancelled: data.filter(a => a.status === 'cancelled').length,
         late: data.filter(a => a.status === 'late').length,
+        totalBookingPrice,
+        totalExtraPaid,
+        totalServicePrice,
+        totalAppointmentsProfit,
     };
 
     return res.status(200).json({ success: true, data, stats });
 });
 
 export const create = asynchandler(async (req, res, next) => {
-    const { patient, service, date, startTime, endTime, doctorNote, record } = req.body;
+    const { patient, service, date, startTime, endTime, doctorNote, record, bookingPrice, extraPaid } = req.body;
 
     if (!patient || !service || !date || !startTime) {
         return next(new AppError('المريض والخدمة والتاريخ والوقت مطلوبون', 400));
@@ -62,8 +72,16 @@ export const create = asynchandler(async (req, res, next) => {
     if (!patientExists) return next(new AppError('المريض غير موجود', 404));
     if (!serviceExists) return next(new AppError('الخدمة غير موجودة', 404));
 
+    let finalBookingPrice = bookingPrice;
+    if (finalBookingPrice === undefined) {
+        const settings = await Setting.findOne().lean();
+        finalBookingPrice = settings ? settings.bookingPrice : 100;
+    }
+
     const appointment = await Appointment.create({
         patient, service, date, startTime, endTime, doctorNote, record,
+        bookingPrice: finalBookingPrice,
+        extraPaid: extraPaid !== undefined ? extraPaid : 0,
         createdBy: req.user._id,
     });
 
@@ -87,11 +105,15 @@ export const getOne = asynchandler(async (req, res, next) => {
 });
 
 export const update = asynchandler(async (req, res, next) => {
-    const { date, startTime, endTime, doctorNote, service, record } = req.body;
+    const { date, startTime, endTime, doctorNote, service, record, bookingPrice, extraPaid } = req.body;
+
+    const updateData = { date, startTime, endTime, doctorNote, service, record };
+    if (bookingPrice !== undefined) updateData.bookingPrice = bookingPrice;
+    if (extraPaid !== undefined) updateData.extraPaid = extraPaid;
 
     const appointment = await Appointment.findByIdAndUpdate(
         req.params.id,
-        { date, startTime, endTime, doctorNote, service, record },
+        updateData,
         { new: true, runValidators: true }
     ).populate('patient', 'name phone').populate('service', 'name price');
 

@@ -42,6 +42,8 @@ const router = Router();
  *               notes: { type: string, description: "ملاحظات" }
  *               status: { type: string, enum: [pending, completed], default: pending, description: "حالة الحجز" }
  *               bookingTime: { type: string, format: date-time, description: "وقت الحجز (اختياري، افتراضيا الوقت الحالي)" }
+ *               bookingPrice: { type: number, description: "سعر الحجز (اختياري، افتراضياً يجلب من الإعدادات)" }
+ *               extraPaid: { type: number, default: 0, description: "الفلوس الإضافية المدفوعة" }
  *               record:
  *                 type: object
  *                 description: السجل المرضي والإجراءات
@@ -95,6 +97,8 @@ const router = Router();
  *               address: { type: string }
  *               notes: { type: string }
  *               status: { type: string, enum: [pending, completed] }
+ *               bookingPrice: { type: number }
+ *               extraPaid: { type: number }
  *               record:
  *                 type: object
  *                 properties:

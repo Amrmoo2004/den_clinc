@@ -1,5 +1,6 @@
 import Service from '../../db/models/service.model.js';
 import User from '../../db/models/user.model.js';
+import Setting from '../../db/models/setting.model.js';
 import { AppError } from '../../utils/appError.js';
 import { asynchandler } from '../../utils/response/response.js';
 
@@ -138,4 +139,30 @@ export const deleteUser = asynchandler(async (req, res, next) => {
     if (!user) return next(new AppError('المستخدم غير موجود', 404));
 
     return res.status(200).json({ success: true, message: 'تم حذف المستخدم' });
+});
+
+// ─── CLINIC SETTINGS ────────────────────────────────────────────────────────
+
+export const getClinicSettings = asynchandler(async (req, res) => {
+    let settings = await Setting.findOne().lean();
+    if (!settings) {
+        settings = { bookingPrice: 100 };
+    }
+    return res.status(200).json({ success: true, data: settings });
+});
+
+export const updateClinicSettings = asynchandler(async (req, res, next) => {
+    const { bookingPrice } = req.body;
+
+    if (bookingPrice === undefined || typeof bookingPrice !== 'number' || bookingPrice < 0) {
+        return next(new AppError('سعر الحجز غير صالح', 400));
+    }
+
+    const settings = await Setting.findOneAndUpdate(
+        {},
+        { bookingPrice },
+        { new: true, upsert: true, runValidators: true }
+    );
+
+    return res.status(200).json({ success: true, message: 'تم تحديث إعدادات العيادة بنجاح', data: settings });
 });

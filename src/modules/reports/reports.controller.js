@@ -85,6 +85,30 @@ const router = Router();
  *     responses:
  *       200:
  *         description: تفاصيل الربح اليومي من الحجوزات والمواعيد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     period: { type: object }
+ *                     dailyBookings: { type: object }
+ *                     appointments: { type: object }
+ *                     totalDailyProfit: { type: number }
+ *                     breakdown:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date: { type: string }
+ *                           dailyBookingsCount: { type: number }
+ *                           dailyBookingsTotal: { type: number }
+ *                           appointmentsCount: { type: number }
+ *                           appointmentsTotal: { type: number }
+ *                           total: { type: number }
  * /api/reports/bookings-analytics:
  *   get:
  *     summary: تحليلات وتقسيمات الحجوزات (الداشبورد)

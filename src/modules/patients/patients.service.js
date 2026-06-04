@@ -1,5 +1,6 @@
 import Patient from '../../db/models/patient.model.js';
 import Appointment from '../../db/models/appointment.model.js';
+import DailyBooking from '../../db/models/dailyBooking.model.js';
 import TreatmentPlan from '../../db/models/treatmentPlan.model.js';
 import Invoice from '../../db/models/invoice.model.js';
 import { AppError } from '../../utils/appError.js';
@@ -80,9 +81,12 @@ export const getReports = asynchandler(async (req, res, next) => {
     const patient = await Patient.findById(req.params.id).lean();
     if (!patient) return next(new AppError('المريض غير موجود', 404));
 
-    const [appointments, treatmentPlans, invoices] = await Promise.all([
+    const [appointments, dailyBookings, treatmentPlans, invoices] = await Promise.all([
         Appointment.find({ patient: req.params.id })
             .populate('service', 'name category price')
+            .sort({ date: -1 })
+            .lean(),
+        DailyBooking.find({ patient: req.params.id })
             .sort({ date: -1 })
             .lean(),
         TreatmentPlan.find({ patient: req.params.id })
@@ -105,11 +109,13 @@ export const getReports = asynchandler(async (req, res, next) => {
             stats: {
                 totalAppointments: appointments.length,
                 completedAppointments: appointments.filter(a => a.status === 'completed').length,
+                totalDailyBookings: dailyBookings.length,
                 activeTreatmentPlans: treatmentPlans.filter(t => t.status === 'active').length,
                 totalPaid,
                 totalDebt,
             },
             appointments,
+            dailyBookings,
             treatmentPlans,
             invoices,
         },

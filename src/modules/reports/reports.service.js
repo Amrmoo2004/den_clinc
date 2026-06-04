@@ -65,12 +65,14 @@ export const getDashboard = asynchandler(async (req, res) => {
 
     const todayDailyBookingsBookingPrice = todayDailyBookingsList.reduce((sum, b) => sum + (b.bookingPrice || 0), 0);
     const todayDailyBookingsExtraPaid = todayDailyBookingsList.reduce((sum, b) => sum + (b.extraPaid || 0), 0);
-    const todayDailyBookingsTotal = todayDailyBookingsBookingPrice + todayDailyBookingsExtraPaid;
+    const todayDailyBookingsProcedurePaid = todayDailyBookingsList.reduce((sum, b) => sum + (b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0), 0);
+    const todayDailyBookingsTotal = todayDailyBookingsBookingPrice + todayDailyBookingsExtraPaid + todayDailyBookingsProcedurePaid;
 
     const todayAppointmentsBookingPrice = todayAppointmentsList.reduce((sum, a) => sum + (a.bookingPrice || 0), 0);
     const todayAppointmentsExtraPaid = todayAppointmentsList.reduce((sum, a) => sum + (a.extraPaid || 0), 0);
     const todayAppointmentsServicePrice = todayAppointmentsList.reduce((sum, a) => sum + (a.service?.price || 0), 0);
-    const todayAppointmentsTotal = todayAppointmentsBookingPrice + todayAppointmentsExtraPaid + todayAppointmentsServicePrice;
+    const todayAppointmentsProcedurePaid = todayAppointmentsList.reduce((sum, a) => sum + (a.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0), 0);
+    const todayAppointmentsTotal = todayAppointmentsBookingPrice + todayAppointmentsExtraPaid + todayAppointmentsServicePrice + todayAppointmentsProcedurePaid;
 
     const todayDailyProfit = todayDailyBookingsTotal + todayAppointmentsTotal;
 
@@ -86,8 +88,8 @@ export const getDashboard = asynchandler(async (req, res) => {
     ]);
 
     const calculateProfit = (appts, bookings) => {
-        const apptTotal = appts.reduce((sum, a) => sum + (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0), 0);
-        const bookingTotal = bookings.reduce((sum, b) => sum + (b.bookingPrice || 0) + (b.extraPaid || 0), 0);
+        const apptTotal = appts.reduce((sum, a) => sum + (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0) + (a.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0), 0);
+        const bookingTotal = bookings.reduce((sum, b) => sum + (b.bookingPrice || 0) + (b.extraPaid || 0) + (b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0), 0);
         return apptTotal + bookingTotal;
     };
 
@@ -112,6 +114,7 @@ export const getDashboard = asynchandler(async (req, res) => {
                     count: todayDailyBookingsList.length,
                     bookingPrice: todayDailyBookingsBookingPrice,
                     extraPaid: todayDailyBookingsExtraPaid,
+                    procedurePaid: todayDailyBookingsProcedurePaid,
                     total: todayDailyBookingsTotal,
                 },
                 appointments: {
@@ -119,6 +122,7 @@ export const getDashboard = asynchandler(async (req, res) => {
                     bookingPrice: todayAppointmentsBookingPrice,
                     extraPaid: todayAppointmentsExtraPaid,
                     servicePrice: todayAppointmentsServicePrice,
+                    procedurePaid: todayAppointmentsProcedurePaid,
                     total: todayAppointmentsTotal,
                 }
             },
@@ -260,12 +264,14 @@ export const getDailyProfitDashboard = asynchandler(async (req, res) => {
 
     const dbBookingPrice = dailyBookings.reduce((sum, b) => sum + (b.bookingPrice || 0), 0);
     const dbExtraPaid = dailyBookings.reduce((sum, b) => sum + (b.extraPaid || 0), 0);
-    const dbTotal = dbBookingPrice + dbExtraPaid;
+    const dbProcedurePaid = dailyBookings.reduce((sum, b) => sum + (b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0), 0);
+    const dbTotal = dbBookingPrice + dbExtraPaid + dbProcedurePaid;
 
     const appBookingPrice = appointments.reduce((sum, a) => sum + (a.bookingPrice || 0), 0);
     const appExtraPaid = appointments.reduce((sum, a) => sum + (a.extraPaid || 0), 0);
     const appServicePrice = appointments.reduce((sum, a) => sum + (a.service?.price || 0), 0);
-    const appTotal = appBookingPrice + appExtraPaid + appServicePrice;
+    const appProcedurePaid = appointments.reduce((sum, a) => sum + (a.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0), 0);
+    const appTotal = appBookingPrice + appExtraPaid + appServicePrice + appProcedurePaid;
 
     const totalDailyProfit = dbTotal + appTotal;
 
@@ -283,9 +289,11 @@ export const getDailyProfitDashboard = asynchandler(async (req, res) => {
             if (!breakdownMap[key]) {
                 breakdownMap[key] = { date: key, dailyBookingsCount: 0, dailyBookingsTotal: 0, appointmentsCount: 0, appointmentsTotal: 0, total: 0 };
             }
+            const dbProcPaid = b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0;
+            const dbTotal = (b.bookingPrice || 0) + (b.extraPaid || 0) + dbProcPaid;
             breakdownMap[key].dailyBookingsCount += 1;
-            breakdownMap[key].dailyBookingsTotal += (b.bookingPrice || 0) + (b.extraPaid || 0);
-            breakdownMap[key].total += (b.bookingPrice || 0) + (b.extraPaid || 0);
+            breakdownMap[key].dailyBookingsTotal += dbTotal;
+            breakdownMap[key].total += dbTotal;
         });
 
         appointments.forEach(a => {
@@ -293,7 +301,8 @@ export const getDailyProfitDashboard = asynchandler(async (req, res) => {
             if (!breakdownMap[key]) {
                 breakdownMap[key] = { date: key, dailyBookingsCount: 0, dailyBookingsTotal: 0, appointmentsCount: 0, appointmentsTotal: 0, total: 0 };
             }
-            const apptTotal = (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0);
+            const appProcPaid = a.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0;
+            const apptTotal = (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0) + appProcPaid;
             breakdownMap[key].appointmentsCount += 1;
             breakdownMap[key].appointmentsTotal += apptTotal;
             breakdownMap[key].total += apptTotal;
@@ -313,37 +322,47 @@ export const getDailyProfitDashboard = asynchandler(async (req, res) => {
                 count: dailyBookings.length,
                 totalBookingPrice: dbBookingPrice,
                 totalExtraPaid: dbExtraPaid,
+                totalProcedurePaid: dbProcedurePaid,
                 total: dbTotal,
-                items: dailyBookings.map(b => ({
-                    _id: b._id,
-                    name: b.name,
-                    phone: b.phone,
-                    date: b.date,
-                    bookingPrice: b.bookingPrice || 0,
-                    extraPaid: b.extraPaid || 0,
-                    total: (b.bookingPrice || 0) + (b.extraPaid || 0),
-                    status: b.status,
-                    createdBy: b.createdBy
-                }))
+                items: dailyBookings.map(b => {
+                    const procPaid = b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0;
+                    return {
+                        _id: b._id,
+                        name: b.name,
+                        phone: b.phone,
+                        date: b.date,
+                        bookingPrice: b.bookingPrice || 0,
+                        extraPaid: b.extraPaid || 0,
+                        procedurePaid: procPaid,
+                        total: (b.bookingPrice || 0) + (b.extraPaid || 0) + procPaid,
+                        status: b.status,
+                        createdBy: b.createdBy
+                    }
+                })
             },
             appointments: {
                 count: appointments.length,
                 totalBookingPrice: appBookingPrice,
                 totalExtraPaid: appExtraPaid,
                 totalServicePrice: appServicePrice,
+                totalProcedurePaid: appProcedurePaid,
                 total: appTotal,
-                items: appointments.map(a => ({
-                    _id: a._id,
-                    patient: a.patient,
-                    service: a.service,
-                    date: a.date,
-                    bookingPrice: a.bookingPrice || 0,
-                    extraPaid: a.extraPaid || 0,
-                    servicePrice: a.service?.price || 0,
-                    total: (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0),
-                    status: a.status,
-                    createdBy: a.createdBy
-                }))
+                items: appointments.map(a => {
+                    const procPaid = a.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0;
+                    return {
+                        _id: a._id,
+                        patient: a.patient,
+                        service: a.service,
+                        date: a.date,
+                        bookingPrice: a.bookingPrice || 0,
+                        extraPaid: a.extraPaid || 0,
+                        servicePrice: a.service?.price || 0,
+                        procedurePaid: procPaid,
+                        total: (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0) + procPaid,
+                        status: a.status,
+                        createdBy: a.createdBy
+                    }
+                })
             },
             totalDailyProfit,
             breakdown: breakdown.length > 0 ? breakdown : undefined

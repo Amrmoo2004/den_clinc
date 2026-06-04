@@ -39,7 +39,10 @@ export const getAll = asynchandler(async (req, res) => {
     const totalBookingPrice = data.reduce((sum, a) => sum + (a.bookingPrice || 0), 0);
     const totalExtraPaid = data.reduce((sum, a) => sum + (a.extraPaid || 0), 0);
     const totalServicePrice = data.reduce((sum, a) => sum + (a.service?.price || 0), 0);
-    const totalAppointmentsProfit = totalBookingPrice + totalExtraPaid + totalServicePrice;
+    const totalProcedurePaid = data.reduce((sum, a) => {
+        return sum + (a.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0);
+    }, 0);
+    const totalAppointmentsProfit = totalBookingPrice + totalExtraPaid + totalServicePrice + totalProcedurePaid;
 
     const stats = {
         total: data.length,
@@ -51,6 +54,7 @@ export const getAll = asynchandler(async (req, res) => {
         totalBookingPrice,
         totalExtraPaid,
         totalServicePrice,
+        totalProcedurePaid,
         totalAppointmentsProfit,
     };
 

@@ -29,12 +29,18 @@ const router = Router();
  *                   type: object
  *                   properties:
  *                     totalIncome: { type: number }
- *                     totalPatients: { type: number }
- *                     completedAppointments: { type: number }
  *                     monthlyRevenue: { type: number }
+ *                     revenueGrowth: { type: string }
+ *                     todayDailyProfit: { type: number }
+ *                     monthDailyProfit: { type: number }
+ *                     yearDailyProfit: { type: number }
+ *                     totalPatients: { type: number }
+ *                     newPatientsLastMonth: { type: number }
+ *                     completedAppointments: { type: number }
  *                     todayAppointments: { type: number }
+ *                     todayStats: { type: object }
+ *                     completionRate: { type: string }
  *                     lowStockAlerts: { type: number }
- *                     completionRate: { type: number }
  *                     recentAppointments:
  *                       type: array
  *                       items: { type: object }

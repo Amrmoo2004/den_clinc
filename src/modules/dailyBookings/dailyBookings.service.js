@@ -1,5 +1,6 @@
 import DailyBooking from '../../db/models/dailyBooking.model.js';
 import Setting from '../../db/models/setting.model.js';
+import Patient from '../../db/models/patient.model.js';
 import { AppError } from '../../utils/appError.js';
 import { asynchandler } from '../../utils/response/response.js';
 
@@ -32,7 +33,10 @@ export const getDailyBookings = asynchandler(async (req, res) => {
     // Stats for the dashboard
     const totalBookingPrice = bookings.reduce((sum, b) => sum + (b.bookingPrice || 0), 0);
     const totalExtraPaid = bookings.reduce((sum, b) => sum + (b.extraPaid || 0), 0);
-    const totalDailyProfit = totalBookingPrice + totalExtraPaid;
+    const totalProcedurePaid = bookings.reduce((sum, b) => {
+        return sum + (b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0);
+    }, 0);
+    const totalDailyProfit = totalBookingPrice + totalExtraPaid + totalProcedurePaid;
 
     const stats = {
         total: bookings.length,
@@ -40,6 +44,7 @@ export const getDailyBookings = asynchandler(async (req, res) => {
         completed: bookings.filter(b => b.status === 'completed').length,
         totalBookingPrice,
         totalExtraPaid,
+        totalProcedurePaid,
         totalDailyProfit,
     };
 
@@ -66,7 +71,21 @@ export const createDailyBooking = asynchandler(async (req, res, next) => {
     }
 
     // if bookingTime is provided, use it, else default in model is Date.now
+    
+    // Auto link or create patient
+    let patientDoc = await Patient.findOne({ phone });
+    if (!patientDoc) {
+        patientDoc = await Patient.create({
+            name,
+            phone,
+            dateOfBirth: age ? new Date(new Date().setFullYear(new Date().getFullYear() - age)) : undefined,
+            address,
+            createdBy: req.user._id,
+        });
+    }
+
     const payload = {
+        patient: patientDoc._id,
         name,
         phone,
         age,

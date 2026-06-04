@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const dailyBookingSchema = new mongoose.Schema(
     {
+        patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient' },
         name: { type: String, required: true, trim: true },
         phone: { type: String, required: true, trim: true },
         age: { type: Number },

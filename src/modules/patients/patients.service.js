@@ -50,10 +50,54 @@ export const create = asynchandler(async (req, res, next) => {
 });
 
 export const getOne = asynchandler(async (req, res, next) => {
-    const patient = await Patient.findById(req.params.id).lean();
+    const patient = await Patient.findById(req.params.id)
+        .populate('createdBy', 'name phone role')
+        .lean();
     if (!patient) return next(new AppError('المريض غير موجود', 404));
 
-    return res.status(200).json({ success: true, data: patient });
+    const [appointments, dailyBookings, treatmentPlans, invoices] = await Promise.all([
+        Appointment.find({ patient: req.params.id })
+            .populate('service', 'name category price')
+            .populate('createdBy', 'name phone role')
+            .sort({ date: -1 })
+            .lean(),
+        DailyBooking.find({ patient: req.params.id })
+            .populate('createdBy', 'name phone role')
+            .sort({ date: -1 })
+            .lean(),
+        TreatmentPlan.find({ patient: req.params.id })
+            .populate('services.service', 'name category price')
+            .populate('createdBy', 'name phone role')
+            .sort({ createdAt: -1 })
+            .lean(),
+        Invoice.find({ patient: req.params.id })
+            .populate('items.service', 'name')
+            .populate('createdBy', 'name phone role')
+            .sort({ createdAt: -1 })
+            .lean(),
+    ]);
+
+    const totalPaid = invoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+    const totalDebt = invoices.reduce((sum, inv) => sum + ((inv.totalAmount || 0) - (inv.paidAmount || 0)), 0);
+
+    return res.status(200).json({
+        success: true,
+        data: {
+            ...patient,
+            stats: {
+                totalAppointments: appointments.length,
+                completedAppointments: appointments.filter(a => a.status === 'completed').length,
+                totalDailyBookings: dailyBookings.length,
+                activeTreatmentPlans: treatmentPlans.filter(t => t.status === 'active').length,
+                totalPaid,
+                totalDebt,
+            },
+            appointments,
+            dailyBookings,
+            treatmentPlans,
+            invoices,
+        },
+    });
 });
 
 export const update = asynchandler(async (req, res, next) => {

@@ -328,15 +328,21 @@ export const getDailyProfitDashboard = asynchandler(async (req, res) => {
                     const procPaid = b.record?.procedures?.reduce((pSum, p) => pSum + (p.paid || 0), 0) || 0;
                     return {
                         _id: b._id,
+                        patient: b.patient,
                         name: b.name,
                         phone: b.phone,
+                        age: b.age,
+                        address: b.address,
                         date: b.date,
+                        bookingTime: b.bookingTime,
                         bookingPrice: b.bookingPrice || 0,
                         extraPaid: b.extraPaid || 0,
                         procedurePaid: procPaid,
+                        record: b.record,
                         total: (b.bookingPrice || 0) + (b.extraPaid || 0) + procPaid,
                         status: b.status,
-                        createdBy: b.createdBy
+                        createdBy: b.createdBy,
+                        createdAt: b.createdAt
                     }
                 })
             },
@@ -358,9 +364,11 @@ export const getDailyProfitDashboard = asynchandler(async (req, res) => {
                         extraPaid: a.extraPaid || 0,
                         servicePrice: a.service?.price || 0,
                         procedurePaid: procPaid,
+                        record: a.record,
                         total: (a.bookingPrice || 0) + (a.extraPaid || 0) + (a.service?.price || 0) + procPaid,
                         status: a.status,
-                        createdBy: a.createdBy
+                        createdBy: a.createdBy,
+                        createdAt: a.createdAt
                     }
                 })
             },

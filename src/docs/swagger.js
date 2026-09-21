@@ -10,7 +10,7 @@ const options = {
         },
         servers: [
             {
-                url: 'http:/13.60.95.152:3000',
+                url: "http://13.60.95.152:3000",
                 description: 'Production Server',
             },
             {

@@ -17,6 +17,7 @@ import inventoryRouter from './modules/inventory/inventory.controller.js';
 import reportsRouter from './modules/reports/reports.controller.js';
 import settingsRouter from './modules/settings/settings.controller.js';
 import dailyBookingsRouter from './modules/dailyBookings/dailyBookings.controller.js';
+import dentalChartRouter from './modules/dentalChart/dentalChart.controller.js';
 
 export const bootstrap = async () => {
     const app = express();
@@ -42,6 +43,7 @@ export const bootstrap = async () => {
     // Routes
     app.use('/api/auth', authRouter);
     app.use('/api/patients', patientsRouter);
+    app.use('/api/dental-chart', dentalChartRouter);
     app.use('/api/appointments', appointmentsRouter);
     app.use('/api/treatment-plans', treatmentsRouter);
     app.use('/api/invoices', invoicesRouter);
